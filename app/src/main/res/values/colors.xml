@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Thombre Transport Signature Red Theme Palette -->
+    <color name="thombre_red">#D32F2F</color>
+    <color name="thombre_red_dark">#9A0007</color>
+    <color name="thombre_red_light">#FF6659</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="surface_light">#F8F9FA</color>
+    <color name="warning_yellow">#FBC02D</color>
+    <color name="warning_yellow_bg">#FFF9C4</color>
+</resources>

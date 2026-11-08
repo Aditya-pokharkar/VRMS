@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- App-sandboxed documents directory where PDFs and backups are stored -->
+    <external-files-path name="bills_docs" path="Documents/bills/" />
+    <external-files-path name="backup_docs" path="Documents/backups/" />
+    <external-files-path name="all_docs" path="Documents/" />
+    <files-path name="internal_bills" path="bills/" />
+</paths>
