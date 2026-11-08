@@ -38,6 +38,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // UI States
     val showDeactivated = MutableStateFlow(false)
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val vehicles: StateFlow<List<VehicleEntity>> = showDeactivated.flatMapLatest { showAll ->
         if (showAll) vehicleDao.getAllVehicles() else vehicleDao.getActiveVehicles()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

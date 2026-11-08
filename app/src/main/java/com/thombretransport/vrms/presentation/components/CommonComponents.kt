@@ -140,7 +140,7 @@ fun DatePickerField(
     onDateSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val calendar = Calendar.currentOrSelected(selectedDateIso)
+    val calendar = getCalendarFromIso(selectedDateIso)
 
     OutlinedCard(
         modifier = Modifier
@@ -245,7 +245,7 @@ fun OutOfSyncBanner() {
     }
 }
 
-private fun Calendar.Companion.currentOrSelected(isoString: String): Calendar {
+private fun getCalendarFromIso(isoString: String): Calendar {
     val cal = Calendar.getInstance()
     if (isoString.isNotBlank()) {
         try {
