@@ -50,7 +50,7 @@ object IndianNumberToWordsConverter {
     private fun convertNumber(n: Long): String {
         if (n == 0L) return ""
         if (n < 20) return units[n.toInt()]
-        if (n < 100) return tens[(n / 10).toInt()] + (if (n % 10 != 0L) " " + units[(n % 10).toInt()] else "")
+        if (n < 100) return tens[(n / 10).toInt()] + (if (n % 10 != 0L) "-" + units[(n % 10).toInt()] else "")
         if (n < 1000) return units[(n / 100).toInt()] + " Hundred" + (if (n % 100 != 0L) " " + convertNumber(n % 100) else "")
         if (n < 100000) return convertNumber(n / 1000) + " Thousand" + (if (n % 1000 != 0L) " " + convertNumber(n % 1000) else "")
         if (n < 10000000) return convertNumber(n / 100000) + " Lakh" + (if (n % 100000 != 0L) " " + convertNumber(n % 100000) else "")
@@ -58,6 +58,6 @@ object IndianNumberToWordsConverter {
     }
 
     private fun convertTwoDigits(n: Int): String {
-        return if (n < 20) units[n] else tens[n / 10] + (if (n % 10 != 0) " " + units[n % 10] else "")
+        return if (n < 20) units[n] else tens[n / 10] + (if (n % 10 != 0) "-" + units[n % 10] else "")
     }
 }
