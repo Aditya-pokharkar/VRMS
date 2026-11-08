@@ -46,6 +46,11 @@ fun BillCompilationScreen(
     var clientExpanded by remember { mutableStateOf(false) }
     var customPeriodText by remember { mutableStateOf("") }
 
+    val filteredClients = remember(clientName, clientSuggestions) {
+        if (clientName.isBlank()) emptyList()
+        else clientSuggestions.filter { it.contains(clientName, ignoreCase = true) && !it.equals(clientName, ignoreCase = true) }.take(5)
+    }
+
     val selectedTripIds = remember { mutableStateListOf<Long>() }
     var tripToConfirmRebilling by remember { mutableStateOf<TripEntity?>(null) }
     var isGenerating by remember { mutableStateOf(false) }
@@ -106,21 +111,28 @@ fun BillCompilationScreen(
                                 Text(text = "Invoice Details", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ThombreRedDark)
 
                                 // Client Autocomplete Field
-                                Box(modifier = Modifier.fillMaxWidth()) {
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = clientExpanded && filteredClients.isNotEmpty(),
+                                    onExpandedChange = { clientExpanded = it },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     OutlinedTextField(
                                         value = clientName,
                                         onValueChange = {
                                             clientName = it
-                                            clientExpanded = it.isNotBlank() && clientSuggestions.any { s -> s.contains(it, ignoreCase = true) }
+                                            clientExpanded = it.isNotBlank()
                                         },
                                         label = { Text("Client Name / Company ('To') *") },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .menuAnchor()
+                                            .fillMaxWidth()
                                     )
-                                    DropdownMenu(
-                                        expanded = clientExpanded,
+                                    ExposedDropdownMenu(
+                                        expanded = clientExpanded && filteredClients.isNotEmpty(),
                                         onDismissRequest = { clientExpanded = false }
                                     ) {
-                                        clientSuggestions.filter { it.contains(clientName, ignoreCase = true) }.take(5).forEach { suggestion ->
+                                        filteredClients.forEach { suggestion ->
                                             DropdownMenuItem(
                                                 text = { Text(suggestion) },
                                                 onClick = {

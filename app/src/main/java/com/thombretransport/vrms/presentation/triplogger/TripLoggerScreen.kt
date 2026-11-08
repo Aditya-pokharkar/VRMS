@@ -207,6 +207,19 @@ fun AcTripForm(
     var tollChargesStr by remember(tripToEdit) { mutableStateOf(tripToEdit?.let { it.escortTollCharges.toString() } ?: "") }
     var amountStr by remember(tripToEdit) { mutableStateOf(tripToEdit?.let { it.baseAmount.toString() } ?: "") }
 
+    var sourceExpanded by remember { mutableStateOf(false) }
+    var destExpanded by remember { mutableStateOf(false) }
+
+    val filteredSource = remember(source, locationSuggestions) {
+        if (source.isBlank()) emptyList()
+        else locationSuggestions.filter { it.contains(source, ignoreCase = true) && !it.equals(source, ignoreCase = true) }.take(5)
+    }
+
+    val filteredDest = remember(destination, locationSuggestions) {
+        if (destination.isBlank()) emptyList()
+        else locationSuggestions.filter { it.contains(destination, ignoreCase = true) && !it.equals(destination, ignoreCase = true) }.take(5)
+    }
+
     val amount = amountStr.toDoubleOrNull() ?: 0.0
     val tollCharges = tollChargesStr.toDoubleOrNull() ?: 0.0
 
@@ -217,19 +230,73 @@ fun AcTripForm(
             onDateSelected = { tripDate = it }
         )
 
-        OutlinedTextField(
-            value = source,
-            onValueChange = { source = it },
-            label = { Text("Source Location") },
+        // Source Location with Autocomplete
+        @OptIn(ExperimentalMaterial3Api::class)
+        ExposedDropdownMenuBox(
+            expanded = sourceExpanded && filteredSource.isNotEmpty(),
+            onExpandedChange = { sourceExpanded = it },
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            OutlinedTextField(
+                value = source,
+                onValueChange = {
+                    source = it
+                    sourceExpanded = it.isNotBlank()
+                },
+                label = { Text("Source Location") },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = sourceExpanded && filteredSource.isNotEmpty(),
+                onDismissRequest = { sourceExpanded = false }
+            ) {
+                filteredSource.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            source = suggestion
+                            sourceExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
-        OutlinedTextField(
-            value = destination,
-            onValueChange = { destination = it },
-            label = { Text("Destination Location") },
+        // Destination Location with Autocomplete
+        @OptIn(ExperimentalMaterial3Api::class)
+        ExposedDropdownMenuBox(
+            expanded = destExpanded && filteredDest.isNotEmpty(),
+            onExpandedChange = { destExpanded = it },
             modifier = Modifier.fillMaxWidth()
-        )
+        ) {
+            OutlinedTextField(
+                value = destination,
+                onValueChange = {
+                    destination = it
+                    destExpanded = it.isNotBlank()
+                },
+                label = { Text("Destination Location") },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = destExpanded && filteredDest.isNotEmpty(),
+                onDismissRequest = { destExpanded = false }
+            ) {
+                filteredDest.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            destination = suggestion
+                            destExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         OutlinedTextField(
             value = invoiceNumber,

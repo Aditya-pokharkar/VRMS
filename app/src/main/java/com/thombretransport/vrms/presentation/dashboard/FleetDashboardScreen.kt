@@ -304,15 +304,26 @@ fun AddVehicleDialog(
                 )
 
                 // Vehicle Type Dropdown
-                Box {
+                @OptIn(ExperimentalMaterial3Api::class)
+                ExposedDropdownMenuBox(
+                    expanded = typeExpanded,
+                    onExpandedChange = { typeExpanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     OutlinedTextField(
                         value = vehicleType,
                         onValueChange = {},
-                        label = { Text("Vehicle Type") },
                         readOnly = true,
-                        modifier = Modifier.fillMaxWidth().clickable { typeExpanded = true }
+                        label = { Text("Vehicle Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
-                    DropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = typeExpanded,
+                        onDismissRequest = { typeExpanded = false }
+                    ) {
                         vehicleTypes.forEach { type ->
                             DropdownMenuItem(
                                 text = { Text(type) },
@@ -326,15 +337,26 @@ fun AddVehicleDialog(
                 }
 
                 // Fuel Type Dropdown (Default Diesel)
-                Box {
+                @OptIn(ExperimentalMaterial3Api::class)
+                ExposedDropdownMenuBox(
+                    expanded = fuelExpanded,
+                    onExpandedChange = { fuelExpanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     OutlinedTextField(
                         value = fuelType,
                         onValueChange = {},
-                        label = { Text("Fuel Type (Default: Diesel)") },
                         readOnly = true,
-                        modifier = Modifier.fillMaxWidth().clickable { fuelExpanded = true }
+                        label = { Text("Fuel Type (Default: Diesel)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = fuelExpanded) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
                     )
-                    DropdownMenu(expanded = fuelExpanded, onDismissRequest = { fuelExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = fuelExpanded,
+                        onDismissRequest = { fuelExpanded = false }
+                    ) {
                         fuelTypes.forEach { fuel ->
                             DropdownMenuItem(
                                 text = { Text(fuel) },
