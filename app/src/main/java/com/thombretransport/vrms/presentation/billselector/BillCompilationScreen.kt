@@ -33,6 +33,8 @@ fun BillCompilationScreen(
     onBillGenerated: () -> Unit
 ) {
     val context = LocalContext.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     var vehicle by remember { mutableStateOf<VehicleEntity?>(null) }
 
     LaunchedEffect(vehicleId) {
@@ -293,6 +295,8 @@ fun BillCompilationScreen(
 
                         Button(
                             onClick = {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
                                 isGenerating = true
                                 viewModel.generateBill(
                                     vehicle = v,

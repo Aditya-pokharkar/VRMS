@@ -160,7 +160,9 @@ fun VehicleCard(
     val isDeactivated = vehicle.status == "DEACTIVATED"
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isDeactivated) { onLogTrip() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isDeactivated) Color(0xFFF0F0F0) else CardBg
@@ -260,7 +262,7 @@ fun VehicleCard(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = ThombreRed)
                     ) {
-                        Text("Log Trip", fontWeight = FontWeight.Bold)
+                        Text("View Trips", fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = onGenerateBill,
@@ -279,6 +281,9 @@ fun AddVehicleDialog(
     onDismiss: () -> Unit,
     onConfirm: (reg: String, type: String, fuel: String, notes: String) -> Unit
 ) {
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+
     var regNumber by remember { mutableStateOf("") }
     var vehicleType by remember { mutableStateOf("AC") }
     var fuelType by remember { mutableStateOf("Diesel") }
@@ -379,14 +384,24 @@ fun AddVehicleDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(regNumber, vehicleType, fuelType, notes) },
+                onClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onConfirm(regNumber, vehicleType, fuelType, notes)
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = ThombreRed)
             ) {
                 Text("Save Vehicle")
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
+            OutlinedButton(
+                onClick = {
+                    keyboardController?.hide()
+                    focusManager.clearFocus()
+                    onDismiss()
+                }
+            ) {
                 Text("Cancel")
             }
         }

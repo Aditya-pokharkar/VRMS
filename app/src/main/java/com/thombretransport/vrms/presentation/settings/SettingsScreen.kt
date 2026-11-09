@@ -33,6 +33,8 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val config by viewModel.appConfig.collectAsState()
     var panText by remember(config) { mutableStateOf(config?.panNumber ?: "AIRPT2980M") }
     val scrollState = rememberScrollState()
@@ -129,6 +131,8 @@ fun SettingsScreen(
 
                     Button(
                         onClick = {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
                             viewModel.updatePan(panText)
                             Toast.makeText(context, "PAN updated successfully", Toast.LENGTH_SHORT).show()
                         },
