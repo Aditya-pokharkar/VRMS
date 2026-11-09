@@ -49,6 +49,15 @@ fun ThombreTopAppBar(
                         Text("←", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
+                } else {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.thombretransport.vrms.R.drawable.app_logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
                 }
                 Column {
                     Text(
