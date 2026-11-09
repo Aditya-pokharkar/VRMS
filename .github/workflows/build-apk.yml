@@ -26,7 +26,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: ./gradlew testDebugUnitTest --info --stacktrace
+
+      - name: Upload Test Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-Report
+          path: app/build/reports/tests/testDebugUnitTest/
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
