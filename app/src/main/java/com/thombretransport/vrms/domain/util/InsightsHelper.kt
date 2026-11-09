@@ -46,9 +46,39 @@ object InsightsHelper {
     }
 
     fun formatRupees(amount: Double, withDecimals: Boolean = false): String {
-        val pattern = if (withDecimals) "#,##,##0.00" else "#,##,##0"
-        val df = DecimalFormat(pattern)
-        return "₹ ${df.format(amount)}"
+        val isNegative = amount < 0
+        val absAmount = kotlin.math.abs(amount)
+        val rounded = if (withDecimals) {
+            String.format(Locale.ENGLISH, "%.2f", absAmount)
+        } else {
+            String.format(Locale.ENGLISH, "%.0f", kotlin.math.round(absAmount))
+        }
+
+        val parts = rounded.split(".")
+        val intPart = parts[0]
+        val decPart = if (parts.size > 1 && withDecimals) "." + parts[1] else ""
+
+        val formattedNumber = if (intPart.length <= 3) {
+            "$intPart$decPart"
+        } else {
+            val last3 = intPart.substring(intPart.length - 3)
+            val remaining = intPart.substring(0, intPart.length - 3)
+
+            val sb = StringBuilder()
+            var count = 0
+            for (i in remaining.length - 1 downTo 0) {
+                sb.append(remaining[i])
+                count++
+                if (count == 2 && i != 0) {
+                    sb.append(",")
+                    count = 0
+                }
+            }
+            val groupedRemaining = sb.reverse().toString()
+            "$groupedRemaining,$last3$decPart"
+        }
+
+        return if (isNegative) "-₹ $formattedNumber" else "₹ $formattedNumber"
     }
 
     /**
