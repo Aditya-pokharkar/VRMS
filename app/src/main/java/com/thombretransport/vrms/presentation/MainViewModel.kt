@@ -8,10 +8,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.thombretransport.vrms.data.local.database.AppDatabase
 import com.thombretransport.vrms.data.local.entity.*
+import com.thombretransport.vrms.data.local.model.ClientRevenueSummary
+import com.thombretransport.vrms.data.local.model.RouteFrequency
 import com.thombretransport.vrms.domain.util.IndianNumberToWordsConverter
+import com.thombretransport.vrms.domain.util.InsightsHelper
 import com.thombretransport.vrms.domain.util.RegistrationNumberValidator
 import com.thombretransport.vrms.engine.backup.ZipBackupManager
 import com.thombretransport.vrms.engine.pdf.PdfInvoiceGenerator
+import com.thombretransport.vrms.presentation.insights.IdleVehicleItem
+import com.thombretransport.vrms.presentation.insights.InsightsUiState
+import com.thombretransport.vrms.presentation.insights.UnbilledTruckItem
+import com.thombretransport.vrms.presentation.insights.VehicleRevenueItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -54,6 +61,151 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val locationSuggestions: StateFlow<List<String>> = historyDao.getLocationSuggestions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // --- INSIGHTS & ANALYTICS ---
+    private val startOfMonth = InsightsHelper.getStartOfMonthMillis()
+    private val startOfLastMonth = InsightsHelper.getStartOfLastMonthMillis()
+    private val currentMonthName = InsightsHelper.getCurrentMonthName()
+    private val lastMonthName = InsightsHelper.getLastMonthName()
+
+    private val financialFlow = combine(
+        tripDao.getUnbilledTotalAmount(),
+        tripDao.getUnbilledTripCount(),
+        tripDao.getUnbilledTollTotal(),
+        billDao.getBilledAmountSince(startOfMonth),
+        billDao.getBillCountSince(startOfMonth)
+    ) { unbilledTotal, unbilledTrips, unbilledToll, thisMonthBilled, thisMonthBills ->
+        FinancialGroup(
+            unbilledTotal = unbilledTotal,
+            unbilledTrips = unbilledTrips,
+            unbilledToll = unbilledToll,
+            thisMonthBilled = thisMonthBilled,
+            thisMonthBills = thisMonthBills
+        )
+    }
+
+    private val monthlyDiscountFlow = combine(
+        billDao.getBilledAmountBetween(startOfLastMonth, startOfMonth),
+        billDao.getDiscountAmountSince(startOfMonth),
+        billDao.getTotalDiscountAllTime(),
+        billDao.getTotalBilledAllTime()
+    ) { lastMonthBilled, thisMonthDiscount, allTimeDiscount, allTimeBilled ->
+        MonthlyDiscountGroup(
+            lastMonthBilled = lastMonthBilled,
+            thisMonthDiscount = thisMonthDiscount,
+            allTimeDiscount = allTimeDiscount,
+            allTimeBilled = allTimeBilled
+        )
+    }
+
+    private val fleetStatsFlow = combine(
+        vehicleDao.getActiveVehicles(),
+        tripDao.getAllVehicleTripStats(),
+        tripDao.getVehicleLastTrips(),
+        tripDao.getUnbilledVehicleSummaries()
+    ) { activeVehicles, tripStats, lastTrips, unbilledSummaries ->
+        val tripStatsMap = tripStats.associateBy { it.vehicleId }
+        val lastTripMap = lastTrips.associateBy { it.vehicleId }
+        val unbilledMap = unbilledSummaries.associateBy { it.vehicleId }
+
+        val fleetTotalEarned = tripStats.sumOf { it.totalEarned }
+
+        val leaderboard = activeVehicles.map { v ->
+            val stats = tripStatsMap[v.id]
+            val earned = stats?.totalEarned ?: 0.0
+            val pct = if (fleetTotalEarned > 0) ((earned / fleetTotalEarned) * 100).toFloat() else 0f
+            VehicleRevenueItem(
+                vehicleId = v.id,
+                registrationNumber = v.registrationNumber,
+                vehicleType = v.vehicleType,
+                totalEarned = earned,
+                tripCount = stats?.tripCount ?: 0,
+                totalKm = stats?.totalKm ?: 0.0,
+                percentageOfFleet = pct
+            )
+        }.sortedByDescending { it.totalEarned }
+
+        val idleTrucks = activeVehicles.mapNotNull { v ->
+            val lastTrip = lastTripMap[v.id]
+            val daysIdle = InsightsHelper.calculateDaysIdle(
+                lastTrip?.lastTripDate,
+                lastTrip?.lastTripCreatedAt,
+                v.createdAt
+            )
+            if (daysIdle >= 7) {
+                IdleVehicleItem(
+                    vehicleId = v.id,
+                    registrationNumber = v.registrationNumber,
+                    vehicleType = v.vehicleType,
+                    daysIdle = daysIdle,
+                    lastTripDate = lastTrip?.lastTripDate
+                )
+            } else null
+        }.sortedByDescending { it.daysIdle }
+
+        val unbilledTrucks = activeVehicles.mapNotNull { v ->
+            val unbilled = unbilledMap[v.id]
+            if (unbilled != null && unbilled.tripCount > 0) {
+                UnbilledTruckItem(
+                    vehicleId = v.id,
+                    registrationNumber = v.registrationNumber,
+                    vehicleType = v.vehicleType,
+                    tripCount = unbilled.tripCount,
+                    totalAmount = unbilled.totalAmount
+                )
+            } else null
+        }.sortedByDescending { it.totalAmount }
+
+        FleetGroup(
+            leaderboard = leaderboard,
+            idleTrucks = idleTrucks,
+            unbilledTrucks = unbilledTrucks
+        )
+    }
+
+    private val clientAndRoutesFlow = combine(
+        billDao.getTopClients(10),
+        tripDao.getFrequentRoutes(10)
+    ) { topClients, routes ->
+        val totalClientEarnings = topClients.sumOf { it.totalAmount }
+        ClientRoutesGroup(
+            topClients = topClients,
+            frequentRoutes = routes,
+            totalClientEarnings = totalClientEarnings
+        )
+    }
+
+    val insightsUiState: StateFlow<InsightsUiState> = combine(
+        financialFlow,
+        monthlyDiscountFlow,
+        fleetStatsFlow,
+        clientAndRoutesFlow
+    ) { fin, monthly, fleet, clientRoutes ->
+        InsightsUiState(
+            unbilledTotalAmount = fin.unbilledTotal,
+            unbilledTripCount = fin.unbilledTrips,
+            thisMonthBilledAmount = fin.thisMonthBilled,
+            thisMonthBillCount = fin.thisMonthBills,
+            idleTrucksCount = fleet.idleTrucks.size,
+
+            lastMonthBilledAmount = monthly.lastMonthBilled,
+            totalBilledAllTime = monthly.allTimeBilled,
+            unbilledTollAmount = fin.unbilledToll,
+            thisMonthDiscountAmount = monthly.thisMonthDiscount,
+            allTimeDiscountAmount = monthly.allTimeDiscount,
+            unbilledTrucks = fleet.unbilledTrucks,
+
+            truckLeaderboard = fleet.leaderboard,
+            idleTrucks = fleet.idleTrucks,
+
+            topClients = clientRoutes.topClients,
+            frequentRoutes = clientRoutes.frequentRoutes,
+            totalClientEarnings = clientRoutes.totalClientEarnings,
+
+            currentMonthName = currentMonthName,
+            lastMonthName = lastMonthName
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), InsightsUiState())
 
     // --- VEHICLE ACTIONS ---
 
@@ -350,3 +502,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
+
+private data class FinancialGroup(
+    val unbilledTotal: Double,
+    val unbilledTrips: Int,
+    val unbilledToll: Double,
+    val thisMonthBilled: Double,
+    val thisMonthBills: Int
+)
+
+private data class MonthlyDiscountGroup(
+    val lastMonthBilled: Double,
+    val thisMonthDiscount: Double,
+    val allTimeDiscount: Double,
+    val allTimeBilled: Double
+)
+
+private data class FleetGroup(
+    val leaderboard: List<VehicleRevenueItem>,
+    val idleTrucks: List<IdleVehicleItem>,
+    val unbilledTrucks: List<UnbilledTruckItem>
+)
+
+private data class ClientRoutesGroup(
+    val topClients: List<ClientRevenueSummary>,
+    val frequentRoutes: List<RouteFrequency>,
+    val totalClientEarnings: Double
+)

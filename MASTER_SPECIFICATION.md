@@ -341,6 +341,13 @@ erDiagram
    * Thombre Transport profile editor (PAN field editable).
    * "Backup Data (.vrms)" button (launches SAF file creator).
    * "Restore Data" button (launches SAF file picker).
+6. **Analytics & Business Insights (`InsightsScreen`):**
+   * Accessible via dedicated Insights icon in Fleet Dashboard top app bar.
+   * "At a Glance" KPI highlight cards: Unbilled Cash Waiting, This Month's Invoiced Revenue, Idle Trucks (0 trips in last 7 days).
+   * Tab 1 (Money & Bills): Monthly totals comparison (current vs last month), unbilled trips breakdown per truck with direct "Make Bill" action, out-of-pocket unbilled toll recovery, client discount concessions.
+   * Tab 2 (Truck Performance): Fleet earnings leaderboard with contribution share, idle trucks alert with inactivity days.
+   * Tab 3 (Clients & Routes): Top regular clients ranked by business volume, most frequent travel routes/corridors.
+   * Designed with simple, jargon-free wording and bilingual context (English + Marathi) suitable for Mr. Thombre.
 
 ---
 
@@ -410,3 +417,4 @@ This table permanently records all approved changes and overrides to the master 
 | Timestamp | Actor | Original Requirement | Approved Change Description |
 | :--- | :--- | :--- | :--- |
 | 08-Nov-2026 19:45 | Mr. Aditya Pokharkar | Initial draft discussion | Formal ratification of Master Specification v1.0.0 baseline. |
+| 09-Nov-2026 13:15 | Mr. Aditya Pokharkar | 5 baseline screens | Added Screen 6: Analytics & Business Insights (`InsightsScreen`) with At-a-Glance KPIs, Money & Bills, Truck Earnings, and Top Clients/Routes. |

@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -33,6 +34,7 @@ fun FleetDashboardScreen(
     onNavigateToTripLogger: (Long) -> Unit,
     onNavigateToBillCompilation: (Long) -> Unit,
     onNavigateToBillHistory: () -> Unit,
+    onNavigateToInsights: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     val context = LocalContext.current
@@ -45,6 +47,9 @@ fun FleetDashboardScreen(
             ThombreTopAppBar(
                 title = "Fleet Dashboard",
                 actions = {
+                    IconButton(onClick = onNavigateToInsights) {
+                        Icon(Icons.Default.Insights, contentDescription = "Business Insights", tint = Color.White)
+                    }
                     IconButton(onClick = onNavigateToBillHistory) {
                         Icon(Icons.Default.History, contentDescription = "Bill History", tint = Color.White)
                     }

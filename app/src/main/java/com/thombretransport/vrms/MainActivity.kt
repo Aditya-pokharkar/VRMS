@@ -13,6 +13,7 @@ import com.thombretransport.vrms.presentation.MainViewModel
 import com.thombretransport.vrms.presentation.billhistory.BillHistoryScreen
 import com.thombretransport.vrms.presentation.billselector.BillCompilationScreen
 import com.thombretransport.vrms.presentation.dashboard.FleetDashboardScreen
+import com.thombretransport.vrms.presentation.insights.InsightsScreen
 import com.thombretransport.vrms.presentation.navigation.Screen
 import com.thombretransport.vrms.presentation.settings.SettingsScreen
 import com.thombretransport.vrms.presentation.theme.VRMSTheme
@@ -44,6 +45,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToBillHistory = {
                                 navController.navigate(Screen.BillHistory.route)
+                            },
+                            onNavigateToInsights = {
+                                navController.navigate(Screen.Insights.route)
                             },
                             onNavigateToSettings = {
                                 navController.navigate(Screen.Settings.route)
@@ -90,7 +94,18 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    // 5. Settings Screen
+                    // 5. Insights & Analytics Screen
+                    composable(Screen.Insights.route) {
+                        InsightsScreen(
+                            viewModel = viewModel,
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateToBillCompilation = { vehicleId ->
+                                navController.navigate(Screen.BillCompilation.createRoute(vehicleId))
+                            }
+                        )
+                    }
+
+                    // 6. Settings Screen
                     composable(Screen.Settings.route) {
                         SettingsScreen(
                             viewModel = viewModel,
